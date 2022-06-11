@@ -14,6 +14,8 @@ parser = Parser(lang='hin')
 # ALL INDICES STARTING FROM 1, NOT 0
 
 sentencesdf = data.sentencesdf
+# clean sentences
+sentencesdf['sentence'] = sentencesdf['sentence'].apply(lambda x: handle.clean_sentences(x))
 connectiveClassesdf = data.connectiveClassesdf
 
 def write_output(all_output_series):

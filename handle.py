@@ -6,6 +6,28 @@ import data
 def removePunctuation(s):
     return re.sub('[,।?!]', '', s)
 
+# cleaning function: take input string, gives output clean string - for use in dataframes
+"""
+Cleaning functions performed (in order):
+    1. Strip whitespace from beginning and end.
+    2. Replace multiple spaces with one space.
+    3. Replace pipe symbols (|) with Hindi purna viram (।)
+    4. Add space before final punctuation character.
+    5. Ensure no space before comma
+    6. Ensure space after comma.
+    7. Add purna viram if no final punctuation.
+"""
+def clean_sentences(s):
+    s = s.strip()
+    s = re.sub('  +', ' ', s)
+    s = s.replace('|', '।')
+    s = re.sub(r'(?<![ ])[।?!]', r' \g<0>', s)
+    s = re.sub(r'\s+(?=,)', r'', s)
+    s = re.sub(r',(?! )', r', ', s)
+    if not bool(re.search(r'[।?!]$', s)):
+        s = ' '.join((s, '।'))
+    return s
+
 # takes input as series (row of sentencesdf)
 # returns series containing connective, and two series for each clause
 
@@ -18,23 +40,32 @@ def removePunctuation(s):
 
 def handle1(series, position):
     sentenceID = series[0]
-    arr = series[1].split(' ')
+    sentence = series[1]
+    finalPunctuation = sentence[-1]
+    arr = sentence.split(' ')
     connective = arr[position-1]
-    c1 = pd.Series(data=[''.join((sentenceID, '.1')), ' '.join(arr[:position-1])], index=['id', 'sentence'])
+
+    # for c1, add same final punctuation symbol as c2
+    c1_sentence = ' '.join(arr[:position-1])
+    c1_final = ''.join((c1_sentence.strip().replace(',', ''), finalPunctuation))
+    c1 = pd.Series(data=[''.join((sentenceID, '.1')), c1_final], index=['id', 'sentence'])
     c2 = pd.Series(data=[''.join((sentenceID, '.2')), ' '.join(arr[position:])], index=['id', 'sentence'])
-    # sid1 = ''.join((sentenceID, '.1'))
-    # sid2 = ''.join((sentenceID, '.2'))
+
     output = pd.Series(data=[series, c1, c2, connective], index=['original', 'c1', 'c2', 'connective'])
     return output
 
 def handle4(series, position):
     sentenceID = series[0]
+    sentence = series[1]
+    finalPunctuation = sentence[-1]
     arr = series[1].split(' ')
     connective = arr[position-1]
     substitution = data.connectiveClassesdf.loc[data.connectiveClassesdf['connective'] == connective]['substitution'].iat[0]
-    # print(arr)
-    # print(' '.join(arr[:position-1]))
-    c1 = pd.Series(data=[''.join((sentenceID, '.1')), ' '.join(arr[:position-1])], index=['id', 'sentence'])
+
+    # for c1, add same final punctuation symbol as c2
+    c1_sentence = ' '.join(arr[:position-1])
+    c1_final = ''.join((c1_sentence.strip().replace(',', ''), finalPunctuation))
+    c1 = pd.Series(data=[''.join((sentenceID, '.1')), c1_final], index=['id', 'sentence'])
     c2 = pd.Series(data=[''.join((sentenceID, '.2')), ' '.join(np.concatenate(([substitution], arr[position:])).tolist())], index=['id', 'sentence'])
     output = pd.Series(data=[series, c1, c2, connective], index=['original', 'c1', 'c2', 'connective'])
     return output

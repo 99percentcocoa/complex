@@ -36,8 +36,8 @@ def write_output(all_output_series):
     open('writeArray2.txt', 'w').write("\n".join(str(x) for x in writeArray2))
     google_sheets.update_sheet_values(data.outputSheetId, "Output1!A2:G", writeArray1, "ROWS")
     google_sheets.update_sheet_values(data.outputSheetId, "Output2!A2:G", writeArray2, "COLUMNS")
-    # logging.debug(writeArray1)
-    # logging.debug(writeArray2)
+    # logging.info(writeArray1)
+    # logging.info(writeArray2)
 
 
 def write_single(output_series):
@@ -54,33 +54,45 @@ def main():
     for index, row in sentencesdf.iterrows():
         id = row['id']
         sentence = row['sentence']
-        logging.debug(f'At {id}: {sentence}')
+        logging.info(f'At {id}: {sentence}')
         sentenceArray = sentence.split(' ')
 
         parserOutput = parser.parse(sentenceArray)
 
         sentencedf = pd.DataFrame([row[2:4] for row in parserOutput], columns=['word', 'type'], index=range(1, len(parserOutput)+1))
-        # logging.debug(sentencedf)
+        # logging.info(sentencedf)
         
         connectivesdf = sentencedf.drop('type', axis=1).reset_index().merge(data.connectiveClassesdf.drop('substitution', axis=1), left_on=["word"], right_on=["connective"]).set_index('index').reset_index().rename(columns={'index':'position'}).drop(['word'], axis=1)
-        # logging.debug(connectivesdf)
+        # logging.info(connectivesdf)
 
         # for c_index, c_row in connectivesdf.iterrows():
         if len(connectivesdf.index) == 0:
-            logging.debug("No connectives. Skipping.")
+            logging.info("No connectives. Skipping.")
             continue
         c_row = connectivesdf.iloc[0]
         connective_type = c_row['type']
+
+        # temporary: types not supported yet.
         if int(connective_type) not in (1, 4):
-            logging.debug(f'Type {connective_type} not supported. Skipping.')
+            logging.info(f'Type {connective_type} not supported. Skipping.')
             continue
+
         position = int(c_row['position'])
+
+        # no VM found in clause 1.
+        if 'VM' not in sentencedf.iloc[:position-1]['type'].to_list():
+            logging.info('No VM found in clause 1. Skipping.')
+            continue
+
         handlerFunction = getattr(handle, ''.join(('handle', str(connective_type))))
+
+        # for printing output to google sheets
         output_series = handlerFunction(row, position)
         all_output_series.append(output_series)
-        logging.debug(f"appended to output: {output_series['c1']['sentence']}, {output_series['c2']['sentence']}")
+
+        logging.info(f"appended to output: {output_series['c1']['sentence']}, {output_series['c2']['sentence']}")
         # write_single(output_series)
-        logging.debug("At end of iteration.")
+        logging.info("At end of iteration.")
     
     write_output(all_output_series)
 

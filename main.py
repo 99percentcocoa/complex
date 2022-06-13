@@ -87,9 +87,6 @@ def main(corpus_sheet_name):
         if 'VM' not in sentencedf.iloc[:position-1]['type'].to_list():
             logging.info('No VM found in clause 1. Skipping.')
             continue
-        elif 'VM' not in sentencedf.iloc[position:]['type'].to_list():
-            logging.info('No VM found in clause 2. Skipping.')
-            continue
 
         handlerFunction = getattr(handle, ''.join(('handle', str(connective_type))))
 

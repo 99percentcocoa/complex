@@ -74,7 +74,7 @@ def handle2(id, sdf, position):
     c2_final = ' '.join((subsitution, c2_sentence))
 
     c1 = pd.Series(data=[''.join((sentenceInfo.sentenceID, '.1')), c1_final], index=['id', 'sentence'])
-    c2 = pd.Series(data=[''.join((sentenceInfo.sentenceID, '.2')), ' '.join(sentenceInfo.arr[position:])], index=['id', 'sentence'])
+    c2 = pd.Series(data=[''.join((sentenceInfo.sentenceID, '.2')), c2_final], index=['id', 'sentence'])
 
     output = pd.Series(data=[series, c1, c2, sentenceInfo.connective], index=['original', 'c1', 'c2', 'connective'])
     return output

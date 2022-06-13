@@ -13,16 +13,16 @@ parser = Parser(lang='hin')
 
 # ALL INDICES STARTING FROM 1, NOT 0
 
-sentencesdf = data.sentencesdf
-# clean sentences
-sentencesdf['sentence'] = sentencesdf['sentence'].apply(lambda x: handle.clean_sentences(x))
-connectiveClassesdf = data.connectiveClassesdf
-
 def write_output(all_output_series):
 
     # For OP1, OP2
     writeArray1 = []
     writeArray2 = [[], []]
+
+    # headers
+    writeArray1.append(['Sentence ID', 'Sentence', 'Clause 1 ID', 'Clause 1', 'Clause 2 ID', 'Clause 2', 'Connective'])
+    writeArray2[0].extend(['ID'])
+    writeArray2[1].extend(['Sentence'])
 
     for series in all_output_series:
         # For OP1
@@ -38,23 +38,19 @@ def write_output(all_output_series):
     # create spreadsheet
     newSheetId = google_sheets.create_new_sheet(data.outputFolderId)
 
-    google_sheets.update_sheet_values(newSheetId, "Output1!A2:G", writeArray1, "ROWS")
-    google_sheets.update_sheet_values(newSheetId, "Output2!A2:G", writeArray2, "COLUMNS")
+    google_sheets.update_sheet_values(newSheetId, "Output1!A1:G", writeArray1, "ROWS")
+    google_sheets.update_sheet_values(newSheetId, "Output2!A1:G", writeArray2, "COLUMNS")
     # logging.info(writeArray1)
     # logging.info(writeArray2)
 
 
-def write_single(output_series):
-    writeArray1 = output_series['original']['id'], output_series['original']['sentence'], output_series['c1']['id'], output_series['c1']['sentence'], output_series['c2']['id'], output_series['c2']['sentence'], output_series['connective']
-    writeArray2 = [[output_series['c1']['id'], output_series['c2']['id']], [output_series['c1']['sentence'], output_series['c2']['sentence']]]
+def main(corpus_sheet_name):
 
-    newSheetId = google_sheets.create_new_sheet(data.outputFolderId)
-    google_sheets.append_to_sheet(newSheetId, "Output1!A2:G", writeArray1, "ROWS")
-    google_sheets.append_to_sheet(newSheetId, "Output2!A2:G", writeArray2, "COLUMNS")
+    sentencesdf = data.get_sentences(corpus_sheet_name)
+    # clean sentences
+    sentencesdf['sentence'] = sentencesdf['sentence'].apply(lambda x: handle.clean_sentences(x))
+    connectiveClassesdf = data.connectiveClassesdf
 
-# iterate over sentences df
-
-def main():
     all_output_series = []
     for index, row in sentencesdf.iterrows():
         id = row['id']
@@ -67,7 +63,7 @@ def main():
         sentencedf = pd.DataFrame([row[2:4] for row in parserOutput], columns=['word', 'type'], index=range(1, len(parserOutput)+1))
         # logging.info(sentencedf)
         
-        connectivesdf = sentencedf.drop('type', axis=1).reset_index().merge(data.connectiveClassesdf.drop('substitution', axis=1), left_on=["word"], right_on=["connective"]).set_index('index').reset_index().rename(columns={'index':'position'}).drop(['word'], axis=1)
+        connectivesdf = sentencedf.drop('type', axis=1).reset_index().merge(connectiveClassesdf.drop('substitution', axis=1), left_on=["word"], right_on=["connective"]).set_index('index').reset_index().rename(columns={'index':'position'}).drop(['word'], axis=1)
         # logging.info(connectivesdf)
 
         # for c_index, c_row in connectivesdf.iterrows():
@@ -102,4 +98,5 @@ def main():
     write_output(all_output_series)
 
 if __name__ == '__main__':
-    main()
+    corpus_sheet_name = input("Test Corpus Sheet Name: ")
+    main(corpus_sheet_name)

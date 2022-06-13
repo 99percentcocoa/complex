@@ -93,7 +93,7 @@ def main(corpus_sheet_name):
         # for printing output to google sheets
         output_series = handlerFunction(id, sentencedf, position)
 
-        if output_series == None:
+        if output_series.empty:
             continue
 
         all_output_series.append(output_series)

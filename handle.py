@@ -74,7 +74,9 @@ def handle2(id, sdf, position):
         substitution = df_filtered[df_filtered['dep'] == 'k1'].iloc[0]['word']
     except IndexError as err:
         logging.info('No k1 in c1. Skipping.')
-        return None
+        # return empty series
+        return pd.Series([])
+    
     c2_sentence = ' '.join(sentenceInfo.arr[position:])
     c2_final = ' '.join((substitution, c2_sentence))
 

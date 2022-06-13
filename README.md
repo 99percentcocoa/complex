@@ -4,11 +4,11 @@
 
 The program uses three Google Sheets Spreadsheets:
 
-	a. Test Corpus Sheet - this sheet contains the sentence IDs and sentences required to be processed. This spreadsheet can contain multiple sheets, and the user can choose which sheet to run the program on (see Instructions).
+- Test Corpus Sheet - this sheet contains the sentence IDs and sentences required to be processed. This spreadsheet can contain multiple sheets, and the user can choose which sheet to run the program on (see Instructions).
 
-	b. Connective Classes Sheet - this sheet contains the list of connectives, and what class/type they belong to.
-	
-	c. Output Sheet Folder - Folder where the Output Sheet will be stored - this spreadsheet will contain the output once generated. It will have two sheets, "Output1" and "Output2".
+- Connective Classes Sheet - this sheet contains the list of connectives, and what class/type they belong to.
+
+- Output Sheet Folder - Folder where the Output Sheet will be stored - this spreadsheet will contain the output once generated. It will have two sheets, "Output1" and "Output2".
 
 The file data.py contains links to these three items in the form of file IDs. File IDs are a part of the URL of the spreadsheet.
 For example, suppose the URL of the spreadsheet is [https://docs.google.com/spreadsheets/d/14aIDFRs3ThMt10pRZsRPeLwapwl698hG7xswu2E_U0E/edit#gid=0].

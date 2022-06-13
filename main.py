@@ -50,13 +50,14 @@ def main(corpus_sheet_name):
     sentencesdf = data.get_sentences(corpus_sheet_name)
     # clean sentences
     sentencesdf['sentence'] = sentencesdf['sentence'].apply(lambda x: handle.clean_sentences(x))
+    totalSentences = len(sentencesdf)
     connectiveClassesdf = data.connectiveClassesdf
 
     all_output_series = []
     for index, row in sentencesdf.iterrows():
         id = row['id']
         sentence = row['sentence']
-        logging.info(f'At {id}: {sentence}')
+        logging.info(f'{index+1}/{totalSentences}: At {id}: {sentence}')
         sentenceArray = sentence.split(' ')
 
         parserOutput = parser.parse(sentenceArray)

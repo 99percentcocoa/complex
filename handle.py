@@ -38,36 +38,59 @@ def clean_sentences(s):
 4 -> Relative
 """
 
-def handle1(series, position):
-    sentenceID = series[0]
-    sentence = series[1]
-    finalPunctuation = sentence[-1]
-    arr = sentence.split(' ')
-    connective = arr[position-1]
+# return pd array containing common info, so don't have to declare each time.
+def getInfo(id, sdf, position):
+    arr = sdf['word'].to_list()
+    sentence = ' '.join(w for w in arr)
+
+    return pd.Series([id, sentence, arr[-1], arr, arr[position-1]], index=['sentenceID', 'sentence', 'finalPunctuation', 'arr', 'connective'])
+
+def handle1(id, sdf, position):
+
+    sentenceInfo = getInfo(id, sdf, position)
+    series = pd.Series([id, sentenceInfo.sentence], index=['id', 'sentence'])
 
     # for c1, add same final punctuation symbol as c2
-    c1_sentence = ' '.join(arr[:position-1])
-    c1_final = ' '.join((c1_sentence.strip().replace(',', ''), finalPunctuation))
-    c1 = pd.Series(data=[''.join((sentenceID, '.1')), c1_final], index=['id', 'sentence'])
-    c2 = pd.Series(data=[''.join((sentenceID, '.2')), ' '.join(arr[position:])], index=['id', 'sentence'])
+    c1_sentence = ' '.join(sentenceInfo.arr[:position-1])
+    c1_final = ' '.join((c1_sentence.strip().replace(',', ''), sentenceInfo.finalPunctuation))
+    c1 = pd.Series(data=[''.join((sentenceInfo.sentenceID, '.1')), c1_final], index=['id', 'sentence'])
+    c2 = pd.Series(data=[''.join((sentenceInfo.sentenceID, '.2')), ' '.join(sentenceInfo.arr[position:])], index=['id', 'sentence'])
 
-    output = pd.Series(data=[series, c1, c2, connective], index=['original', 'c1', 'c2', 'connective'])
+    output = pd.Series(data=[series, c1, c2, sentenceInfo.connective], index=['original', 'c1', 'c2', 'connective'])
     return output
 
-def handle4(series, position):
-    sentenceID = series[0]
-    sentence = series[1]
-    finalPunctuation = sentence[-1]
-    arr = series[1].split(' ')
-    connective = arr[position-1]
-    substitution = data.connectiveClassesdf.loc[data.connectiveClassesdf['connective'] == connective]['substitution'].iat[0]
+def handle2(id, sdf, position):
+
+    sentenceInfo = getInfo(id, sdf, position)
+    series = pd.Series([id, sentenceInfo.sentence], index=['id', 'sentence'])
+
+    c1_sentence = ' '.join(sentenceInfo.arr[:position-1])
+    c1_final = ' '.join((c1_sentence, sentenceInfo.finalPunctuation))
+    df_filtered = sdf[:position-1]
+
+    # first karta
+    subsitution = df_filtered[df_filtered['dep'] == 'k1'].iloc[0]['word']
+    c2_sentence = ' '.join(sentenceInfo.arr[position:])
+    c2_final = ' '.join((subsitution, c2_sentence))
+
+    c1 = pd.Series(data=[''.join((sentenceInfo.sentenceID, '.1')), c1_final], index=['id', 'sentence'])
+    c2 = pd.Series(data=[''.join((sentenceInfo.sentenceID, '.2')), ' '.join(sentenceInfo.arr[position:])], index=['id', 'sentence'])
+
+    output = pd.Series(data=[series, c1, c2, sentenceInfo.connective], index=['original', 'c1', 'c2', 'connective'])
+    return output
+
+def handle4(id, sdf, position):
+    sentenceInfo = getInfo(id, sdf, position)
+    series = pd.Series([id, sentenceInfo.sentence], index=['id', 'sentence'])
+    
+    substitution = data.connectiveClassesdf.loc[data.connectiveClassesdf['connective'] == sentenceInfo.connective]['substitution'].iat[0]
 
     # for c1, add same final punctuation symbol as c2
-    c1_sentence = ' '.join(arr[:position-1])
-    c1_final = ' '.join((c1_sentence.strip().replace(',', ''), finalPunctuation))
-    c1 = pd.Series(data=[''.join((sentenceID, '.1')), c1_final], index=['id', 'sentence'])
-    c2 = pd.Series(data=[''.join((sentenceID, '.2')), ' '.join(np.concatenate(([substitution], arr[position:])).tolist())], index=['id', 'sentence'])
-    output = pd.Series(data=[series, c1, c2, connective], index=['original', 'c1', 'c2', 'connective'])
+    c1_sentence = ' '.join(sentenceInfo.arr[:position-1])
+    c1_final = ' '.join((c1_sentence.strip().replace(',', ''), sentenceInfo.finalPunctuation))
+    c1 = pd.Series(data=[''.join((sentenceInfo.sentenceID, '.1')), c1_final], index=['id', 'sentence'])
+    c2 = pd.Series(data=[''.join((sentenceInfo.sentenceID, '.2')), ' '.join(np.concatenate(([substitution], sentenceInfo.arr[position:])).tolist())], index=['id', 'sentence'])
+    output = pd.Series(data=[series, c1, c2, sentenceInfo.connective], index=['original', 'c1', 'c2', 'connective'])
     return output
 
 

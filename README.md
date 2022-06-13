@@ -21,9 +21,10 @@ Check the file IDs in data.py, and change if required.
 INSTRUCTIONS
 
 Navigate to the folder containing all the files, and run main.py:
-$ python3 main.py [test_sheet_name]
 
-[test_sheet_name] is the name of the sheet inside the Test Corpus spreadsheet, which is to be used. If none is specified, "Sheet1" will be used by default.
+```$ python3 main.py [test_sheet_name]```
+
+`[test_sheet_name]` is the name of the sheet inside the Test Corpus spreadsheet, which is to be used. If none is specified, "Sheet1" will be used by default.
 
 
 NOTE: Google Authentication

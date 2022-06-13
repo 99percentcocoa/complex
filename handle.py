@@ -47,7 +47,7 @@ def handle1(series, position):
 
     # for c1, add same final punctuation symbol as c2
     c1_sentence = ' '.join(arr[:position-1])
-    c1_final = ''.join((c1_sentence.strip().replace(',', ''), finalPunctuation))
+    c1_final = ' '.join((c1_sentence.strip().replace(',', ''), finalPunctuation))
     c1 = pd.Series(data=[''.join((sentenceID, '.1')), c1_final], index=['id', 'sentence'])
     c2 = pd.Series(data=[''.join((sentenceID, '.2')), ' '.join(arr[position:])], index=['id', 'sentence'])
 
@@ -64,7 +64,7 @@ def handle4(series, position):
 
     # for c1, add same final punctuation symbol as c2
     c1_sentence = ' '.join(arr[:position-1])
-    c1_final = ''.join((c1_sentence.strip().replace(',', ''), finalPunctuation))
+    c1_final = ' '.join((c1_sentence.strip().replace(',', ''), finalPunctuation))
     c1 = pd.Series(data=[''.join((sentenceID, '.1')), c1_final], index=['id', 'sentence'])
     c2 = pd.Series(data=[''.join((sentenceID, '.2')), ' '.join(np.concatenate(([substitution], arr[position:])).tolist())], index=['id', 'sentence'])
     output = pd.Series(data=[series, c1, c2, connective], index=['original', 'c1', 'c2', 'connective'])

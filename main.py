@@ -6,6 +6,7 @@ import google_sheets
 from isc_parser import Parser
 import handle
 import data
+import sys
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -98,5 +99,9 @@ def main(corpus_sheet_name):
     write_output(all_output_series)
 
 if __name__ == '__main__':
-    corpus_sheet_name = input("Test Corpus Sheet Name: ")
+    try:
+        corpus_sheet_name = sys.argv[1]
+    except IndexError:
+        corpus_sheet_name = 'Sheet1'
+    
     main(corpus_sheet_name)

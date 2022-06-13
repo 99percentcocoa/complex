@@ -34,8 +34,12 @@ def write_output(all_output_series):
 
     open('writeArray1.txt', 'w').write("\n".join(str(x) for x in writeArray1))
     open('writeArray2.txt', 'w').write("\n".join(str(x) for x in writeArray2))
-    google_sheets.update_sheet_values(data.outputSheetId, "Output1!A2:G", writeArray1, "ROWS")
-    google_sheets.update_sheet_values(data.outputSheetId, "Output2!A2:G", writeArray2, "COLUMNS")
+
+    # create spreadsheet
+    newSheetId = google_sheets.create_new_sheet(data.outputFolderId)
+
+    google_sheets.update_sheet_values(newSheetId, "Output1!A2:G", writeArray1, "ROWS")
+    google_sheets.update_sheet_values(newSheetId, "Output2!A2:G", writeArray2, "COLUMNS")
     # logging.info(writeArray1)
     # logging.info(writeArray2)
 
@@ -44,8 +48,9 @@ def write_single(output_series):
     writeArray1 = output_series['original']['id'], output_series['original']['sentence'], output_series['c1']['id'], output_series['c1']['sentence'], output_series['c2']['id'], output_series['c2']['sentence'], output_series['connective']
     writeArray2 = [[output_series['c1']['id'], output_series['c2']['id']], [output_series['c1']['sentence'], output_series['c2']['sentence']]]
 
-    google_sheets.append_to_sheet(data.outputSheetId, "Output1!A2:G", writeArray1, "ROWS")
-    google_sheets.append_to_sheet(data.outputSheetId, "Output2!A2:G", writeArray2, "COLUMNS")
+    newSheetId = google_sheets.create_new_sheet(data.outputFolderId)
+    google_sheets.append_to_sheet(newSheetId, "Output1!A2:G", writeArray1, "ROWS")
+    google_sheets.append_to_sheet(newSheetId, "Output2!A2:G", writeArray2, "COLUMNS")
 
 # iterate over sentences df
 

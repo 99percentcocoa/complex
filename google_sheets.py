@@ -4,7 +4,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 import os.path
 import string
-import json
+from datetime import datetime
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -13,7 +13,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
 
 # The ID and range of a sample spreadsheet.
 # SAMPLE_SPREADSHEET_ID = '1ZGXKNdNmua9X5TsRwebrjZxoOJOXc0ZJymaoO_BkS8Q'
@@ -99,3 +99,60 @@ def append_to_sheet(sheet_id, range, valuesArray, majorDimension):
 
     except HttpError as err:
         print(err)
+
+# creates sheet in Folder ID according to predefined format, returns file ID
+def create_new_sheet(folder_id):
+    file_metadata = {
+        'name': ' '.join(('Output', datetime.now().strftime("%d-%m-%y %H:%M"))),
+        'parents': [folder_id],
+        'mimeType': 'application/vnd.google-apps.spreadsheet'
+    }
+
+    try:
+        credentials = get_creds()
+        service = build('drive', 'v3', credentials=credentials)
+        sheet = service.files().create(body=file_metadata).execute()
+        add_sheets(sheet['id'], credentials)
+
+        return sheet['id']
+    
+    except HttpError as err:
+        print(err)
+        return None
+
+# adds sheets "Output1" and "Output2" to sheet, removes "Sheet1"
+def add_sheets(sheetId, credentials):
+
+    batch_update_body = {
+        'requests': [
+            {
+                "addSheet": {
+                    "properties": {
+                        "title": "Output1"
+                    }
+                }
+            },
+            {
+                "addSheet": {
+                    "properties": {
+                        "title": "Output2"
+                    }
+                }
+            },
+            {
+                "deleteSheet": {
+                    "sheetId": 0
+                }
+            }
+        ]
+    }
+
+    try:
+        service = build('sheets', 'v4', credentials=credentials)
+
+        req = service.spreadsheets().batchUpdate(spreadsheetId=sheetId, body=batch_update_body)
+        res = req.execute()
+
+    except HttpError as err:
+        print(err)
+        return None

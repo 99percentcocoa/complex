@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import re
 import data
+import logging
 
 def removePunctuation(s):
     return re.sub('[,।?!]', '', s)
@@ -69,9 +70,13 @@ def handle2(id, sdf, position):
     df_filtered = sdf[:position-1]
 
     # first karta
-    subsitution = df_filtered[df_filtered['dep'] == 'k1'].iloc[0]['word']
+    try:
+        substitution = df_filtered[df_filtered['dep'] == 'k1'].iloc[0]['word']
+    except IndexError as err:
+        logging.info('No k1 in c1. Skipping.')
+        return None
     c2_sentence = ' '.join(sentenceInfo.arr[position:])
-    c2_final = ' '.join((subsitution, c2_sentence))
+    c2_final = ' '.join((substitution, c2_sentence))
 
     c1 = pd.Series(data=[''.join((sentenceInfo.sentenceID, '.1')), c1_final], index=['id', 'sentence'])
     c2 = pd.Series(data=[''.join((sentenceInfo.sentenceID, '.2')), c2_final], index=['id', 'sentence'])

@@ -56,7 +56,7 @@ def main(corpus_sheet_name):
     for index, row in sentencesdf.iterrows():
         id = row['id']
         sentence = row['sentence']
-        # logging.info(f'At {id}: {sentence}')
+        logging.info(f'At {id}: {sentence}')
         sentenceArray = sentence.split(' ')
 
         parserOutput = parser.parse(sentenceArray)
@@ -92,6 +92,10 @@ def main(corpus_sheet_name):
 
         # for printing output to google sheets
         output_series = handlerFunction(id, sentencedf, position)
+
+        if output_series == None:
+            continue
+
         all_output_series.append(output_series)
 
         logging.info(f"appended to output: {output_series['c1']['sentence']}, {output_series['c2']['sentence']}")

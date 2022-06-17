@@ -5,6 +5,7 @@ logging.basicConfig(level=logging.DEBUG)
 import os.path
 import string
 from datetime import datetime
+import pandas as pd
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -156,3 +157,20 @@ def add_sheets(sheetId, credentials):
     except HttpError as err:
         print(err)
         return None
+
+def write_df_to_sheet(df, sheet_id, range):
+    try:
+        service = build('sheets', 'v4', credentials=get_creds())
+        sheet = service.spreadsheets()
+
+        valueRangeBody = {
+            "range": range,
+            "majorDimension": "ROWS",
+            "values": pd.concat([df.columns.to_frame().T, df], ignore_index=True).to_numpy().tolist()
+        }
+
+        request = sheet.values().append(spreadsheetId=sheet_id, range=range, valueInputOption='RAW', body=valueRangeBody)
+        response = request.execute()
+
+    except HttpError as err:
+        print(err)

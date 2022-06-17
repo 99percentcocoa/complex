@@ -102,6 +102,11 @@ def handle2(sdf, position):
 
     sentenceInfo = getInfo(sdf, position)
 
+    # check if both sides ccof
+    if sdf.iat[position-2, 3] == 'ccof' and sdf.iat[position, 3] == 'ccof':
+        logging.info('CCOF found on both sides. Skipping.')
+        return []
+
     df_filtered = sdf.iloc[:position-1]
     if 'VM' not in df_filtered['type'].to_list():
         logging.info('No VM found in clause 1. Skipping.')

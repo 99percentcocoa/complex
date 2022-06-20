@@ -36,11 +36,12 @@ def main(corpus_sheet_name):
     sentencesdf['sentence'] = sentencesdf['sentence'].apply(lambda x: handle.clean_sentences(x))
 
     op2df = pd.DataFrame(data=[], columns=['ID', 'Sentence'])
-    op1df = pd.DataFrame(data=[], columns=['Original ID', 'Original Sentence', 'Clause IDs', 'Clauses', 'Connectives'])
+    op1df = pd.DataFrame(data=[], columns=['Original ID', 'Original Sentence', 'Clause IDs', 'Clauses', 'Connectives', 'Connective IDs'])
 
     for index, row in sentencesdf.iterrows():
         outputSentences = []
         connectives = []
+        connectiveIDs = []
         logging.info(f"At {row['sentence']}")
         inputSentence = row['sentence']
         id = row['id']
@@ -80,6 +81,7 @@ def main(corpus_sheet_name):
                 outputSentences.extend(funcOutput)
 
                 connectives.append(connective)
+                connectiveIDs.append(c_type)
                 
                 sdf = handle.create_sdf(funcOutput[1])
                 cdf = handle.create_cdf(sdf)
@@ -93,7 +95,7 @@ def main(corpus_sheet_name):
                 # only append to output dataframes if output generated. Else skip.
                 op2Sentencedf = pd.DataFrame(data={'ID': clauseIDs, 'Sentence': outputSentences})
                 op2df = pd.concat([op2df, op2Sentencedf], axis=0, ignore_index=True)
-                op1df.loc[len(op1df)] = [id, inputSentence, '\n'.join(clauseIDs), '\n'.join(outputSentences), '\n'.join(connectives)]
+                op1df.loc[len(op1df)] = [id, inputSentence, '\n'.join(clauseIDs), '\n'.join(outputSentences), '\n'.join(connectives), '\n'.join(connectiveIDs)]
         
     write_output(op1df, op2df)
 

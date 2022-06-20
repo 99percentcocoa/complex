@@ -126,7 +126,7 @@ def handle1(sdf, position):
 
     # for c1, add same final punctuation symbol as c2
     c1_sentence = ' '.join(sentenceInfo.arr[:position-1])
-    c1_final = ' '.join((c1_sentence.strip().replace(',', ''), sentenceInfo.finalPunctuation))
+    c1_final = ' '.join((c1_sentence.strip(','), sentenceInfo.finalPunctuation))
     c1 = c1_final
     c2 = ' '.join(sentenceInfo.arr[position:])
 
@@ -146,7 +146,7 @@ def handle2(sdf, position):
         return []
 
     c1_sentence = ' '.join(sentenceInfo.arr[:position-1])
-    c1_final = ' '.join((c1_sentence, sentenceInfo.finalPunctuation))
+    c1_final = ' '.join((c1_sentence.strip(','), sentenceInfo.finalPunctuation))
 
     # first karta
     substitution = lookup_karta_substitution(sdf, position)

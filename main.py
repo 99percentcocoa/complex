@@ -84,18 +84,16 @@ def main(corpus_sheet_name):
                 sdf = handle.create_sdf(funcOutput[1])
                 cdf = handle.create_cdf(sdf)
 
-            # logging.info(len(cdf))
-        outputSentences = pd.Series(data=outputSentences).drop_duplicates().to_list()
-        logging.info(f'output sentences: {outputSentences}')
-        logging.info(f'connectives: {connectives}')
-        clauseIDs = handle.assign_ids(id, outputSentences)
-        logging.info(clauseIDs)
-        # logging.info(generate_sentences_df(outputSentences, clauseIDs))
+                outputSentences = pd.Series(data=outputSentences).to_list()
+                logging.info(f'output sentences: {outputSentences}')
+                logging.info(f'connectives: {connectives}')
+                clauseIDs = handle.assign_ids(id, outputSentences)
+                logging.info(clauseIDs)
 
-        # append to output dataframes
-        op2Sentencedf = pd.DataFrame(data={'ID': clauseIDs, 'Sentence': outputSentences})
-        op2df = pd.concat([op2df, op2Sentencedf], axis=0, ignore_index=True)
-        op1df.loc[len(op1df)] = [id, inputSentence, '\n'.join(clauseIDs), '\n'.join(outputSentences), '\n'.join(connectives)]
+                # only append to output dataframes if output generated. Else skip.
+                op2Sentencedf = pd.DataFrame(data={'ID': clauseIDs, 'Sentence': outputSentences})
+                op2df = pd.concat([op2df, op2Sentencedf], axis=0, ignore_index=True)
+                op1df.loc[len(op1df)] = [id, inputSentence, '\n'.join(clauseIDs), '\n'.join(outputSentences), '\n'.join(connectives)]
         
     write_output(op1df, op2df)
 

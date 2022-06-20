@@ -64,6 +64,11 @@ def getInfo(sdf, position):
     arr = sdf['word'].to_list()
     sentence = ' '.join(w for w in arr)
 
+    # check if WQ in clause1, give final punctuation accordingly
+    finalPunctuation = arr[-1]
+    if 'WQ' in sdf.loc[:position]['type'].to_list():
+        finalPunctuation = '?'
+
     return pd.Series([sentence, arr[-1], arr, arr[position-1]], index=['sentence', 'finalPunctuation', 'arr', 'connective'])
 
 # create clause ids
@@ -82,7 +87,7 @@ def assign_ids(id, arr):
 # checks whether 'VM' present in 1st clause
 # arguments (sdf, position), output True/False
 def check_vm(sdf, position):
-    if 'VM' in sdf.iloc[:position-1]['type'].to_list():
+    if 'VM' in sdf.loc[:position]['type'].to_list():
         logging.info(f"VM found at {sdf[sdf['type'] == 'VM']['word'].to_list()}")
         return True
     else:
@@ -104,6 +109,12 @@ def lookup_karta_substitution(sdf, position):
         return substitution
     except IndexError as err:
         return []
+
+# given sdf and position, check if both clauses have a ccof pointing to connector position
+def check_ccof(sdf, position):
+    sdf_clause1 = sdf.loc[:position-1]
+    sdf_clause2 = sdf.loc[position+1:]
+    return bool(len(sdf_clause1[(sdf_clause1['dep_num'] == str(position)) & (sdf_clause1['dep'] == "ccof")]) > 0) or bool(len(sdf_clause2[(sdf_clause2['dep_num'] == str(position)) & (sdf_clause2['dep'] == "ccof")]) > 0)
 
 
 def handle1(sdf, position):
@@ -128,8 +139,7 @@ def handle2(sdf, position):
     sentenceInfo = getInfo(sdf, position)
 
     # check if both sides ccof
-    if sdf.iat[position-2, 3] == 'ccof' and sdf.iat[position, 3] == 'ccof':
-        logging.info('CCOF found on both sides. Skipping.')
+    if not check_ccof(sdf, position):
         return []
     
     if not check_vm(sdf, position):
@@ -162,13 +172,8 @@ def handle4(sdf, position):
 
     # for c1, add same final punctuation symbol as c2
     c1_sentence = ' '.join(sentenceInfo.arr[:position-1])
-    c1_final = ' '.join((c1_sentence.strip().replace(',', ''), sentenceInfo.finalPunctuation))
+    c1_final = ' '.join((c1_sentence.strip(','), sentenceInfo.finalPunctuation))
     c1 = c1_final
     c2 = ' '.join(np.concatenate(([substitution], sentenceInfo.arr[position:])).tolist())
     output = [c1, c2]
     return output
-
-
-# if __name__ == "__main__":
-#     series = pd.Series({'id': 'Hin_Geo_ncert_6stnd_1ch_0072', 'sentence': 'यही कारण है कि इसके आकार को भू-आभ कहा जाता है।'})
-#     print(handle1(series, 4)['c2']['sentence'])

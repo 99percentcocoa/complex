@@ -77,16 +77,41 @@ def assign_ids(id, arr):
         return ids
 
 
+# checking conditions, used in handle functions
+
+# checks whether 'VM' present in 1st clause
+# arguments (sdf, position), output True/False
+def check_vm(sdf, position):
+    if 'VM' in sdf.iloc[:position-1]['type'].to_list():
+        logging.info(f"VM found at {sdf[sdf['type'] == 'VM']['word'].to_list()}")
+        return True
+    else:
+        logging.info('No VM found in clause 1. Skipping.')
+        return False
+
+# lookup subsitution: takes connecive as input, returns substitution. Ensure input is of correct type.
+def lookup_connective_substitution(connective):
+    substitution = data.connectiveClassesdf.loc[data.connectiveClassesdf['connective'] == connective]['substitution'].iat[0]
+    return substitution
+
+# lookup karta substitution: takes (sdf, position) as input, returns first found karta in clause 1.
+# if not found, returns empty array
+def lookup_karta_substitution(sdf, position):
+    sdf_clause1 = sdf[:position-1]
+    # note: returns 1st found karta
+    try:
+        substitution = sdf_clause1[sdf_clause1['dep'] == 'k1'].iloc[0]['word']
+        return substitution
+    except IndexError as err:
+        return []
+
+
 def handle1(sdf, position):
 
     sentenceInfo = getInfo(sdf, position)
 
-    sdfp1 = sdf.iloc[:position-1]
-    if 'VM' not in sdfp1['type'].to_list():
-        logging.info('No VM found in clause 1. Skipping.')
+    if not check_vm(sdf, position):
         return []
-
-    logging.info(f"VM found at {sdfp1[sdfp1['type'] == 'VM']['word'].to_list()}")
 
     # for c1, add same final punctuation symbol as c2
     c1_sentence = ' '.join(sentenceInfo.arr[:position-1])
@@ -106,24 +131,16 @@ def handle2(sdf, position):
     if sdf.iat[position-2, 3] == 'ccof' and sdf.iat[position, 3] == 'ccof':
         logging.info('CCOF found on both sides. Skipping.')
         return []
-
-    df_filtered = sdf.iloc[:position-1]
-    if 'VM' not in df_filtered['type'].to_list():
-        logging.info('No VM found in clause 1. Skipping.')
+    
+    if not check_vm(sdf, position):
         return []
-
-    logging.info(f"VM found at {df_filtered[df_filtered['type'] == 'VM']['word'].to_list()}")
 
     c1_sentence = ' '.join(sentenceInfo.arr[:position-1])
     c1_final = ' '.join((c1_sentence, sentenceInfo.finalPunctuation))
 
     # first karta
-    try:
-        substitution = df_filtered[df_filtered['dep'] == 'k1'].iloc[0]['word']
-        logging.info(f'Substitution: {substitution}')
-    except IndexError as err:
-        logging.info('No k1 in c1. Skipping.')
-        # return empty series
+    substitution = lookup_karta_substitution(sdf, position)
+    if not bool(substitution):
         return []
     
     c2_sentence = ' '.join(sentenceInfo.arr[position:])
@@ -138,14 +155,10 @@ def handle2(sdf, position):
 def handle4(sdf, position):
     sentenceInfo = getInfo(sdf, position)
 
-    sdfp1 = sdf.iloc[:position-1]
-    if 'VM' not in sdfp1['type'].to_list():
-        logging.info('No VM found in clause 1. Skipping.')
+    if not check_vm(sdf, position):
         return []
-
-    logging.info(f"VM found at {sdfp1[sdfp1['type'] == 'VM']['word'].to_list()}")
     
-    substitution = data.connectiveClassesdf.loc[data.connectiveClassesdf['connective'] == sentenceInfo.connective]['substitution'].iat[0]
+    substitution = lookup_connective_substitution(sentenceInfo.connective)
 
     # for c1, add same final punctuation symbol as c2
     c1_sentence = ' '.join(sentenceInfo.arr[:position-1])

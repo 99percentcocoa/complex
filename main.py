@@ -35,11 +35,10 @@ def main(corpus_sheet_name):
     sentencesdf = data.get_sentences(corpus_sheet_name)
     sentencesdf['sentence'] = sentencesdf['sentence'].apply(lambda x: handle.clean_sentences(x))
 
-    all_output_series = []
     op2df = pd.DataFrame(data=[], columns=['ID', 'Sentence'])
     op1df = pd.DataFrame(data=[], columns=['Original ID', 'Original Sentence', 'Clause IDs', 'Clauses', 'Connectives'])
 
-    for idx, row in sentencesdf.iterrows():
+    for index, row in sentencesdf.iterrows():
         outputSentences = []
         connectives = []
         logging.info(f"At {row['sentence']}")
@@ -70,7 +69,7 @@ def main(corpus_sheet_name):
                 # clauses not generated. Update cdf, move to next iteration. Keep sdf unchanged. Keep outputSentences unchanged.
                 logging.info('Empty output. Skipping.')
                 cdf = cdf.drop(index=0).reset_index(drop=True)
-                # continue
+            
             else:
                 # clauses generated. Log to output array, regenerate sdf, regenerate cdf, move to next iteration.
                 # If clauses generated, pop last element from outputSentences, add both new elements.

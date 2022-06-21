@@ -50,6 +50,7 @@ def main(corpus_sheet_name):
         sdf = handle.create_sdf(inputSentence)
         cdf = handle.create_cdf(sdf)
 
+        # this while loop runs for a single sentence input
         while len(cdf) > 0:
             logging.info(f'cdf: {cdf}')
             position = int(cdf.iloc[0]['position'])
@@ -86,16 +87,18 @@ def main(corpus_sheet_name):
                 sdf = handle.create_sdf(funcOutput[1])
                 cdf = handle.create_cdf(sdf)
 
-                outputSentences = pd.Series(data=outputSentences).to_list()
-                logging.info(f'output sentences: {outputSentences}')
-                logging.info(f'connectives: {connectives}')
-                clauseIDs = handle.assign_ids(id, outputSentences)
-                logging.info(clauseIDs)
+        # check if output was generated, i.e. check if there is at least one split performed
+        if len(connectives) > 0:
+            outputSentences = pd.Series(data=outputSentences).to_list()
+            logging.info(f'output sentences: {outputSentences}')
+            logging.info(f'connectives: {connectives}')
+            clauseIDs = handle.assign_ids(id, outputSentences)
+            logging.info(clauseIDs)
 
-                # only append to output dataframes if output generated. Else skip.
-                op2Sentencedf = pd.DataFrame(data={'ID': clauseIDs, 'Sentence': outputSentences})
-                op2df = pd.concat([op2df, op2Sentencedf], axis=0, ignore_index=True)
-                op1df.loc[len(op1df)] = [id, inputSentence, '\n'.join(clauseIDs), '\n'.join(outputSentences), '\n'.join(connectives), '\n'.join(connectiveTypes)]
+            # only append to output dataframes if output generated. Else skip.
+            op2Sentencedf = pd.DataFrame(data={'ID': clauseIDs, 'Sentence': outputSentences})
+            op2df = pd.concat([op2df, op2Sentencedf], axis=0, ignore_index=True)
+            op1df.loc[len(op1df)] = [id, inputSentence, '\n'.join(clauseIDs), '\n'.join(outputSentences), '\n'.join(connectives), '\n'.join(connectiveTypes)]
         
     write_output(op1df, op2df)
 

@@ -139,7 +139,7 @@ def handle2(sdf, position):
     sentenceInfo = getInfo(sdf, position)
 
     # check if both sides ccof
-    if not check_ccof(sdf, position):
+    if check_ccof(sdf, position):
         return []
     
     if not check_vm(sdf, position):

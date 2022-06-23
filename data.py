@@ -7,8 +7,7 @@ def removePunctuation(s):
 
 testCorpusSheetId = "14aIDFRs3ThMt10pRZsRPeLwapwl698hG7xswu2E_U0E"
 connectiveClassesSheetId = "1ZGXKNdNmua9X5TsRwebrjZxoOJOXc0ZJymaoO_BkS8Q"
-outputSheetId = "1a6147uuxWQ2JDTkS7p1fidbEkF64CHjnlrVCn-esaCI"
-outputFolderId = "1fJQ_DWrWArSHpFEHEtlav_DkhMsBWGlP"
+outputFolderId = "1v2DpNms30OJZUVt_V533QrnCWvLWNdAY"
 
 connectiveClasses = google_sheets.get_sheet_values(connectiveClassesSheetId, "Sheet1!A1:C")
 connectiveClassesdf = pd.DataFrame(connectiveClasses[1:], columns=connectiveClasses[0], index=range(1, len(connectiveClasses)))

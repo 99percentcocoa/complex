@@ -141,6 +141,13 @@ def add_sheets(sheetId, credentials):
                 }
             },
             {
+                "addSheet": {
+                    "properties": {
+                        "title": "Log"
+                    }
+                }
+            },
+            {
                 "deleteSheet": {
                     "sheetId": 0
                 }

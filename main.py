@@ -14,7 +14,7 @@ parser = Parser(lang='hin')
 
 # ALL INDICES STARTING FROM 1, NOT 0
 
-def write_output(op1df, op2df):
+def write_output(op1df, op2df, logdf):
 
     open('writeArray1.txt', 'w').write(pd.concat([op1df.columns.to_frame().T, op1df], ignore_index=True).to_string())
     open('writeArray2.txt', 'w').write(pd.concat([op2df.columns.to_frame().T, op2df], ignore_index=True).to_string())
@@ -22,8 +22,9 @@ def write_output(op1df, op2df):
     # create spreadsheet
     newSheetId = google_sheets.create_new_sheet(data.outputFolderId)
 
-    google_sheets.write_df_to_sheet(op1df, newSheetId, "Output1!A1:E")
-    google_sheets.write_df_to_sheet(op2df, newSheetId, "Output2!A1:B")
+    google_sheets.write_df_to_sheet(op1df, newSheetId, "Output1!A1:Z")
+    google_sheets.write_df_to_sheet(op2df, newSheetId, "Output2!A1:Z")
+    google_sheets.write_df_to_sheet(logdf, newSheetId, "Log!A1:Z")
     # google_sheets.update_sheet_values(newSheetId, "Output1!A1:G", writeArray1, "ROWS")
     # google_sheets.update_sheet_values(newSheetId, "Output2!A1:G", writeArray2, "COLUMNS")
     # logging.info(writeArray1)
@@ -37,6 +38,8 @@ def main(corpus_sheet_name):
 
     op2df = pd.DataFrame(data=[], columns=['ID', 'Sentence'])
     op1df = pd.DataFrame(data=[], columns=['Original ID', 'Original Sentence', 'Clause IDs', 'Clauses', 'Connectives', 'Connective IDs'])
+
+    log_df = pd.DataFrame(columns=['Sentence ID', 'Sentence', 'Connective', 'Type', 'Position'])
 
     for index, row in sentencesdf.iterrows():
         outputSentences = []
@@ -70,6 +73,7 @@ def main(corpus_sheet_name):
             if len(funcOutput) == 0:
                 # clauses not generated. Update cdf, move to next iteration. Keep sdf unchanged. Keep outputSentences unchanged.
                 logging.info('Empty output. Skipping.')
+                log_df = pd.concat([log_df, pd.DataFrame([[id, inputSentence, connective, c_type, position]], columns=['Sentence ID', 'Sentence', 'Connective', 'Type', 'Position'])], axis=0, ignore_index=True)
                 cdf = cdf.drop(index=0).reset_index(drop=True)
             
             else:
@@ -100,7 +104,7 @@ def main(corpus_sheet_name):
             op2df = pd.concat([op2df, op2Sentencedf], axis=0, ignore_index=True)
             op1df.loc[len(op1df)] = [id, inputSentence, '\n'.join(clauseIDs), '\n'.join(outputSentences), '\n'.join(connectives), '\n'.join(connectiveTypes)]
         
-    write_output(op1df, op2df)
+    write_output(op1df, op2df, log_df)
 
 if __name__ == '__main__':
     try:

@@ -69,7 +69,7 @@ def getInfo(sdf, position):
     if 'WQ' in sdf.loc[:position]['type'].to_list():
         finalPunctuation = '?'
 
-    return pd.Series([sentence, arr[-1], arr, arr[position-1]], index=['sentence', 'finalPunctuation', 'arr', 'connective'])
+    return pd.Series([sentence, finalPunctuation, arr, arr[position-1]], index=['sentence', 'finalPunctuation', 'arr', 'connective'])
 
 # create clause ids
 def assign_ids(id, arr):

@@ -46,6 +46,7 @@ def clean_sentences(s):
 """
 
 connectiveClassesdf = data.connectiveClassesdf
+connectives = connectiveClassesdf['connective'].to_list()
 
 # create a sentence df from a sentence
 def create_sdf(sentence):
@@ -54,10 +55,51 @@ def create_sdf(sentence):
     sentencedf = pd.DataFrame([[row[i] for i in [2, 3, 6, 7]] for row in parserOutput], columns=['word', 'type', 'dep_num', 'dep'], index=range(1, len(parserOutput)+1))
     return sentencedf
 
+# function that converts character-indexed positions to word-indexed positions. Used by create_cdf.
+def getPositions(c, s):
+    cArray = c.split(' ')
+    sArray = s.split(' ')
+    posArray = []
+
+    for w in cArray:
+        posArray.append(sArray.index(w)+1)
+    
+    return posArray
+
 # create connectives df from sentence df
 def create_cdf(sdf):
-    cdf = sdf.drop(['type', 'dep', 'dep_num'], axis=1).reset_index().merge(connectiveClassesdf.drop('substitution', axis=1), left_on=["word"], right_on=["connective"]).set_index('index').reset_index().rename(columns={'index':'position'}).drop(['word'], axis=1).sort_values(by='position')
-    return cdf
+    sentence = ' '.join(sdf['word'].to_list())
+    matches = []
+    for c in connectives:
+        regstr = '(?<=[ .,?!])' + c + '(?=[ .,?!])'
+        for match in re.finditer(regstr, sentence):
+            matchInfo = [match.group(0), set(np.arange(match.start(), match.end()))]
+            # print(matchInfo)
+            matches.append(matchInfo)
+    # sort by length
+    matches = sorted(matches, key=lambda m: -len(m[1]))
+    # print(f'matches: {matches}')
+    uniqueMatches = matches
+
+    # go through, compare
+    for i in list(range(len(uniqueMatches))):
+        # print(f'i: {i}')
+        for e in uniqueMatches[i+1:]:
+            if e[1].issubset(uniqueMatches[i][1]):
+                uniqueMatches.remove(e)
+
+    # sort unique matches by position
+    uniqueMatches = sorted(uniqueMatches, key=lambda m: list(m[1])[0])
+    print(uniqueMatches)
+
+    connectiveStrings = list(map(lambda x: x[0], uniqueMatches))
+    # print(connectiveStrings)
+
+    connectivePositions = list(map(lambda x: getPositions(x, sentence), connectiveStrings))
+    # print(connectivePositions)
+
+    ccdf = pd.DataFrame(data={'position': connectivePositions, 'connective': connectiveStrings, 'type': [connectiveClassesdf.iloc[connectives.index(x)]['type'] for x in connectiveStrings]})
+    return ccdf
 
 # return pd array containing common info, so don't have to declare each time.
 def getInfo(sdf, position):
@@ -66,10 +108,10 @@ def getInfo(sdf, position):
 
     # check if WQ in clause1, give final punctuation accordingly
     finalPunctuation = arr[-1]
-    if 'WQ' in sdf.loc[:position]['type'].to_list():
+    if 'WQ' in sdf.loc[:position[0]]['type'].to_list():
         finalPunctuation = '?'
 
-    return pd.Series([sentence, finalPunctuation, arr, arr[position-1]], index=['sentence', 'finalPunctuation', 'arr', 'connective'])
+    return pd.Series([sentence, finalPunctuation, arr, ' '.join([arr[i-1] for i in position])], index=['sentence', 'finalPunctuation', 'arr', 'connective'])
 
 # create clause ids
 def assign_ids(id, arr):
@@ -87,7 +129,7 @@ def assign_ids(id, arr):
 # checks whether 'VM' present in 1st clause
 # arguments (sdf, position), output True/False
 def check_vm(sdf, position):
-    if 'VM' in sdf.loc[:position]['type'].to_list():
+    if 'VM' in sdf.loc[:position[0]]['type'].to_list():
         logging.info(f"VM found at {sdf[sdf['type'] == 'VM']['word'].to_list()}")
         return True
     else:
@@ -96,13 +138,22 @@ def check_vm(sdf, position):
 
 # lookup subsitution: takes connecive as input, returns substitution. Ensure input is of correct type.
 def lookup_connective_substitution(connective):
+    """Lookup connective substitution
+    
+    >>> lookup_connective_substitution('जिसने')
+    'इसने'
+    >>> lookup_connective_substitution('परन्तु')
+    ''
+    >>> lookup_connective_substitution('जो कि')
+    'वह'
+    """
     substitution = data.connectiveClassesdf.loc[data.connectiveClassesdf['connective'] == connective]['substitution'].iat[0]
     return substitution
 
 # lookup karta substitution: takes (sdf, position) as input, returns first found karta in clause 1.
 # if not found, returns empty array
 def lookup_karta_substitution(sdf, position):
-    sdf_clause1 = sdf[:position-1]
+    sdf_clause1 = sdf[:position[0]-1]
     # note: returns 1st found karta
     try:
         substitution = sdf_clause1[sdf_clause1['dep'] == 'k1'].iloc[0]['word']
@@ -112,12 +163,13 @@ def lookup_karta_substitution(sdf, position):
 
 # given sdf and position, check if both clauses have a ccof pointing to connector position
 def check_ccof(sdf, position):
-    sdf_clause1 = sdf.loc[:position-1]
-    sdf_clause2 = sdf.loc[position+1:]
-    return bool(len(sdf_clause1[(sdf_clause1['dep_num'] == str(position)) & (sdf_clause1['dep'] == "ccof")]) > 0) or bool(len(sdf_clause2[(sdf_clause2['dep_num'] == str(position)) & (sdf_clause2['dep'] == "ccof")]) > 0)
+    sdf_clause1 = sdf.loc[:position[0]-1]
+    sdf_clause2 = sdf.loc[position[-1]+1:]
+    return bool(len(sdf_clause1[(sdf_clause1['dep_num'] == str(position[0])) & (sdf_clause1['dep'] == "ccof")]) > 0) or bool(len(sdf_clause2[(sdf_clause2['dep_num'] == str(position[0])) & (sdf_clause2['dep'] == "ccof")]) > 0)
 
 
 def handle1(sdf, position):
+    # position is an array. For type 1, it will have only 1 element
 
     sentenceInfo = getInfo(sdf, position)
 
@@ -125,10 +177,10 @@ def handle1(sdf, position):
         return []
 
     # for c1, add same final punctuation symbol as c2
-    c1_sentence = ' '.join(sentenceInfo.arr[:position-1])
+    c1_sentence = ' '.join(sentenceInfo.arr[:position[0]-1])
     c1_final = ' '.join((c1_sentence.strip(','), sentenceInfo.finalPunctuation))
     c1 = c1_final
-    c2 = ' '.join(sentenceInfo.arr[position:])
+    c2 = ' '.join(sentenceInfo.arr[position[0]:])
 
     output = [c1, c2]
     return output
@@ -140,9 +192,11 @@ def handle2(sdf, position):
 
     # check if both sides ccof
     if check_ccof(sdf, position):
+        print('ccof check failed.')
         return []
     
     if not check_vm(sdf, position):
+        print('vm check failed.')
         return []
 
     c1_sentence = ' '.join(sentenceInfo.arr[:position-1])
@@ -150,6 +204,7 @@ def handle2(sdf, position):
 
     # first karta
     substitution = lookup_karta_substitution(sdf, position)
+    print(f'Substitution: {substitution}')
     if not bool(substitution):
         return []
     
@@ -171,9 +226,14 @@ def handle4(sdf, position):
     substitution = lookup_connective_substitution(sentenceInfo.connective)
 
     # for c1, add same final punctuation symbol as c2
-    c1_sentence = ' '.join(sentenceInfo.arr[:position-1])
+    c1_sentence = ' '.join(sentenceInfo.arr[:position[0]-1])
     c1_final = ' '.join((c1_sentence.strip(','), sentenceInfo.finalPunctuation))
     c1 = c1_final
-    c2 = ' '.join(np.concatenate(([substitution], sentenceInfo.arr[position:])).tolist())
+    c2 = ' '.join(np.concatenate(([substitution], sentenceInfo.arr[position[-1]:])).tolist())
     output = [c1, c2]
     return output
+
+# doctest code
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

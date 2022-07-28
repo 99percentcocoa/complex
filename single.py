@@ -17,7 +17,7 @@ def handle_single(sentence, id):
     # this while loop runs for a single sentence input
     while len(cdf) > 0:
         logging.info(f'cdf: {cdf}')
-        position = int(cdf.iloc[0]['position'])
+        position = cdf.iloc[0]['position']
         c_type = int(cdf.iloc[0]['type'])
         connective = cdf.iloc[0]['connective']
         logging.info(f"Handling {connective} at position {position}")

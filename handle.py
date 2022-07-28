@@ -206,6 +206,7 @@ def handle2(sdf, position):
     substitution = lookup_karta_substitution(sdf, position)
     print(f'Substitution: {substitution}')
     if not bool(substitution):
+        print('k1 substitution not found. Skipping.')
         return []
     
     c2_sentence = ' '.join(sentenceInfo.arr[position:])
